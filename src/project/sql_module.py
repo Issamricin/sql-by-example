@@ -9,40 +9,49 @@ s = os.path.dirname(__file__)
 p = Path(s).parent.parent.joinpath("database")
 
 
-
-class DetailDataBaseManager():
-    db_detail_path = str(p) + os.path.sep + "dealer.db" # dealer database
+class DetailDataBaseManager:
+    db_detail_path = str(p) + os.path.sep + "dealer.db"  # dealer database
     con = sqlite3.connect(db_detail_path)
     c = con.cursor()
 
-    def __init__(self)->None:
+    def __init__(self) -> None:
         pass
 
     @classmethod
-    def add_customer(cls,name,email,tele):   
-        cls.c.execute("insert into customer values (null,?,?,?)", (name,email,tele))
-        cls.con.commit()
-
-    @classmethod    
-    def add_car(cls,desc,mil,man_id,seller_id,sold):
-        cls.c.execute("insert into car values (null,?,?,?,?,?)", (desc,mil,man_id,seller_id,sold))
+    def add_customer(cls, name, email, tele):
+        cls.c.execute("insert into customer values (null,?,?,?)", (name, email, tele))
         cls.con.commit()
 
     @classmethod
-    def add_manuf(cls,name,country):
-        cls.c.execute("insert into manufacturer values (null,?,?)", (name,country))
+    def add_car(cls, desc, mil, man_id, seller_id, sold):
+        cls.c.execute(
+            "insert into car values (null,?,?,?,?,?)",
+            (desc, mil, man_id, seller_id, sold),
+        )
         cls.con.commit()
-    
-    @classmethod
-    def add_seller(cls,name,email,addr,teleph):
-        cls.c.execute("insert into seller values (null,?,?,?,?)", (name,email,addr,teleph))
-        cls.con.commit()
-    
-    @classmethod
-    def sell_car(cls,car_id, customer_id, sale_date, sale_price):
-        cls.c.execute("insert into sale values(null, ?, ?, ?, ?)", (car_id,customer_id, sale_date, sale_price))
 
-        cls.c.execute("update car set sold = 'yes' where id = :car_id ", {'car_id': car_id})
+    @classmethod
+    def add_manuf(cls, name, country):
+        cls.c.execute("insert into manufacturer values (null,?,?)", (name, country))
+        cls.con.commit()
+
+    @classmethod
+    def add_seller(cls, name, email, addr, teleph):
+        cls.c.execute(
+            "insert into seller values (null,?,?,?,?)", (name, email, addr, teleph)
+        )
+        cls.con.commit()
+
+    @classmethod
+    def sell_car(cls, car_id, customer_id, sale_date, sale_price):
+        cls.c.execute(
+            "insert into sale values(null, ?, ?, ?, ?)",
+            (car_id, customer_id, sale_date, sale_price),
+        )
+
+        cls.c.execute(
+            "update car set sold = 'yes' where id = :car_id ", {"car_id": car_id}
+        )
         cls.con.commit()
 
     @classmethod
@@ -55,10 +64,13 @@ class DetailDataBaseManager():
         pprint(unsold_cars)
 
     @classmethod
-    def show_cars_by(cls,name):
+    def show_cars_by(cls, name):
         print(f"\ncars by {name}:")
-        cls.c.execute("""select * from car
-                where manufacturer_id = (select id from manufacturer where name = :name)""", {"name": name})
+        cls.c.execute(
+            """select * from car
+                where manufacturer_id = (select id from manufacturer where name = :name)""",
+            {"name": name},
+        )
         column_names = [description[0] for description in cls.c.description]
         print(" | ".join(column_names))
         cars = cls.c.fetchall()
@@ -76,10 +88,12 @@ class DetailDataBaseManager():
     @classmethod
     def show_sales_record(cls):
         print("\nSales record:")
-        cls.c.execute("""select c.description,cu.name as customer_name, sale_date, sale_price from sale s
+        cls.c.execute(
+            """select c.description,cu.name as customer_name, sale_date, sale_price from sale s
                 join car c on s.car_id = c.id
                 join customer cu on s.customer_id = cu.id
-                """)
+                """
+        )
         column_names = [description[0] for description in cls.c.description]
         print(" | ".join(column_names))
         sales = cls.c.fetchall()
@@ -95,9 +109,12 @@ class DetailDataBaseManager():
         pprint(sales)
 
     @classmethod
-    def show_cars_with_mileage(cls,mileage):
+    def show_cars_with_mileage(cls, mileage):
         print(f"\nCars with mileage less than {mileage} miles: ")
-        cls.c.execute("select description, mileage from car where mileage <= :mile", {'mile':mileage})
+        cls.c.execute(
+            "select description, mileage from car where mileage <= :mile",
+            {"mile": mileage},
+        )
         column_names = [description[0] for description in cls.c.description]
         print(" | ".join(column_names))
         cars = cls.c.fetchall()
@@ -106,10 +123,12 @@ class DetailDataBaseManager():
     @classmethod
     def show_sellers_total(cls):
         print("\nSeller's total: $")
-        cls.c.execute("""select s.name, sum(sale_price) as total from sale sa
+        cls.c.execute(
+            """select s.name, sum(sale_price) as total from sale sa
                 join car c on car_id = c.id
                 join seller s on c.seller_id = s.id
-                group by s.name""")
+                group by s.name"""
+        )
         column_names = [description[0] for description in cls.c.description]
         print(" | ".join(column_names))
         total = cls.c.fetchall()
@@ -118,9 +137,11 @@ class DetailDataBaseManager():
     @classmethod
     def manufacturer_total_cars(cls):
         print("\nTotal cars for each manufacturer: ")
-        cls.c.execute("""select count(*) as total, m.name from car
+        cls.c.execute(
+            """select count(*) as total, m.name from car
                 join manufacturer m on m.id = manufacturer_id
-                group by m.name""")
+                group by m.name"""
+        )
         column_names = [description[0] for description in cls.c.description]
         print(" | ".join(column_names))
         total = cls.c.fetchall()
@@ -129,15 +150,75 @@ class DetailDataBaseManager():
     @classmethod
     def country_total_cars(cls):
         print("\nTotal cars for each country: ")
-        cls.c.execute("""select count(*) as total, m.country from car
+        cls.c.execute(
+            """select count(*) as total, m.country from car
                 join manufacturer m on m.id = manufacturer_id
-                group by m.country""")
+                group by m.country"""
+        )
         column_names = [description[0] for description in cls.c.description]
         print(" | ".join(column_names))
         total = cls.c.fetchall()
-        pprint(total)    
+        pprint(total)
 
-'''
+    # my solution --------------------------------------------------------------------------------------------------------------------------
+    @classmethod
+    def sumNoSoldCar(cls):
+        print("\nNon sold car for each brand : ")
+        cls.c.execute(
+            """ SELECT sum(c.id) as sum,m.name from car  c
+                JOIN manufacturer m on c.manufacturer_id=m.id
+                WHERE c.sold like "yes"
+                GROUP by m.name;"""
+        )
+        column_names = [description[0] for description in cls.c.description]
+        print(" | ".join(column_names))
+        total = cls.c.fetchall()
+        pprint(total)
+
+    @classmethod
+    def showAvgSales(cls):
+        print("\Average sales of each country : ")
+        cls.c.execute(
+            """SELECT count(s.id) Avg ,m.country
+                FROM manufacturer m
+                JOIN car c on c.manufacturer_id=m.id
+                JOIN sale s on c.id=s.car_id
+                WHERE c.sold = 'yes'
+                GROUP by m.country"""
+        )
+        column_name = [description[0] for description in cls.c.description]
+        print(" | ".join(column_name))
+        total = cls.c.fetchall()
+        pprint(total)
+
+    @classmethod
+    def showNewCars(cls):
+        print("\nNew cars : ")
+        cls.c.execute(
+            """SELECT m.name from manufacturer m 
+                JOIN car c on m.id=c.manufacturer_id
+                WHERE c.mileage = 0
+                GROUP by m.name"""
+        )
+        total = cls.c.fetchall()
+        pprint(total)
+
+    @classmethod
+    def showAvgPrice(cls):
+        print("\nAverage price for each brand  : ")
+        cls.c.execute(
+            """SELECT m.country , avg(s.sale_price) average from sale s
+                JOIN  car c on s.car_id=c.id 
+                join  manufacturer m on m.id=c.manufacturer_id
+                GROUP by m.country"""
+        )
+        column_name = [description[0] for description in cls.c.description]
+        print(" | ".join(column_name))
+        total = cls.c.fetchall()
+        pprint(total)
+
+
+"""
 DetailDataBaseManager.add_customer("jess","re@gmail.com","2343 54")
 DetailDataBaseManager.add_customer("abdo","ab@gmail.com","23 34 1232")
 DetailDataBaseManager.add_customer("rodi","rod@gmail.com","324 2134 21")
@@ -175,16 +256,21 @@ DetailDataBaseManager.sell_car(3,2,"12/5/2025","2100$")
 DetailDataBaseManager.sell_car(4,2,"12/5/2025","9000$")
 DetailDataBaseManager.sell_car(5,4,"12/5/2025","4500$")
 DetailDataBaseManager.sell_car(9,3,"12/5/2025","2500$")
-'''
+"""
 
-DetailDataBaseManager.list_unsold_cars()
-DetailDataBaseManager.show_cars_by("audi")
-DetailDataBaseManager.show_customers()
-DetailDataBaseManager.show_sales_record()
-DetailDataBaseManager.show_average_sold()
+# DetailDataBaseManager.list_unsold_cars()
+# DetailDataBaseManager.show_cars_by("audi")
+# DetailDataBaseManager.show_customers()
+# DetailDataBaseManager.show_sales_record()
+# DetailDataBaseManager.show_average_sold()
 
-DetailDataBaseManager.show_cars_with_mileage(2000)
-DetailDataBaseManager.show_sellers_total()
+# DetailDataBaseManager.show_cars_with_mileage(2000)
+# DetailDataBaseManager.show_sellers_total()
 
-DetailDataBaseManager.manufacturer_total_cars()
-DetailDataBaseManager.country_total_cars()
+# DetailDataBaseManager.manufacturer_total_cars()
+# DetailDataBaseManager.country_total_cars()
+
+DetailDataBaseManager.sumNoSoldCar()
+DetailDataBaseManager.showAvgSales()
+DetailDataBaseManager.showNewCars()
+DetailDataBaseManager.showAvgPrice()

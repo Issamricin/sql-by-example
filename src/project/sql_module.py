@@ -160,7 +160,7 @@ class DetailDataBaseManager:
         total = cls.c.fetchall()
         pprint(total)
 
-    # my solution ---------------------------------------------------------------------------------------------------------------------
+    # my solution -------------------------------------------------------------------------------------------------------------------
     @classmethod
     def sumNoSoldCar(cls):
         print("\nNon sold car for each brand : ")
